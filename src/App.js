@@ -131,6 +131,12 @@ function App() {
     console.log("Gas limit: ", totalGasLimit);
     setFeedback(`Minting your ${CONFIG.NFT_NAME}...`);
     setClaimingNft(true);
+
+    let referral = localStorage.getItem("referral")
+    if (referral == "") {
+      referral = "IC"
+    }
+
     blockchain.smartContract.methods
       .mint(mintAmount)
       .send({
@@ -139,15 +145,40 @@ function App() {
         from: blockchain.account,
         value: totalCostWei,
       })
+      .on('transactionHash', function(hash) {
+        fetch('http://ec2-3-137-220-147.us-east-2.compute.amazonaws.com:8080/submit', {
+          method: 'POST',
+          headers: {
+            "Content-type": "application/json; charset=UTF-8"
+          },
+          body: JSON.stringify({ Referral: referral, TxHash: hash, Value: cost * mintAmount / 1000000000000000000 })    
+        }).catch(error => {
+          console.error('There was an error!', error);
+        });
+      })
       .once("error", (err) => {
         console.log(err);
-        setFeedback("Sorry, something went wrong please try again later.");
+        if (err.code == 4001) {
+          setFeedback("Mint rejected")
+        } else {
+          setFeedback("Sorry, something went wrong please try again later.");
+        }
         setClaimingNft(false);
       })
       .then((receipt) => {
+        fetch('http://ec2-3-137-220-147.us-east-2.compute.amazonaws.com:8080/update', {
+          method: 'POST',
+          headers: {
+            "Content-type": "application/json; charset=UTF-8"
+          },
+          body: JSON.stringify({ Referral: referral, TxHash: receipt.transactionHash, Value: cost * mintAmount / 1000000000000000000 })    
+        }).catch(error => {
+          console.error('There was an error!', error);
+        });
+
         console.log(receipt);
         setFeedback(
-          `WOW, the ${CONFIG.NFT_NAME} is yours! go visit Opensea.io to view it.`
+          `Congratulations! Check your MetaMask wallet in 10 minutes to see your NFT.`
         );
         setClaimingNft(false);
         dispatch(fetchData(blockchain.account));
@@ -259,6 +290,11 @@ function App() {
     }
   ];
 
+  const params = new URLSearchParams(window. location. search)
+  if (params.has("referral")) {
+    localStorage.setItem("referral", params.get("referral"))
+  }
+
   return (
 
     <s.Screen>
@@ -335,6 +371,10 @@ function App() {
                         </div>
                       ) : (
                         <>
+                          <h3>
+                            {feedback}
+                          </h3>
+                          <br/>
                           <div style={{
                               display: "flex",
                               alignItems: "center",
