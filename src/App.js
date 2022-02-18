@@ -146,7 +146,7 @@ function App() {
         value: totalCostWei,
       })
       .on('transactionHash', function(hash) {
-        fetch('http://ec2-3-137-220-147.us-east-2.compute.amazonaws.com:8080/submit', {
+        fetch('https://api.mintinventorclub.io/submit', {
           method: 'POST',
           headers: {
             "Content-type": "application/json; charset=UTF-8"
@@ -166,7 +166,7 @@ function App() {
         setClaimingNft(false);
       })
       .then((receipt) => {
-        fetch('http://ec2-3-137-220-147.us-east-2.compute.amazonaws.com:8080/update', {
+        fetch('https://api.mintinventorclub.io/update', {
           method: 'POST',
           headers: {
             "Content-type": "application/json; charset=UTF-8"
