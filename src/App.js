@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { connect } from "./redux/blockchain/blockchainActions";
+import { connect_blockchain } from "./redux/blockchain/blockchainActions";
 import { fetchData } from "./redux/data/dataActions";
 import AccordionWrapper from './components/AccordionWrapper'; 
 import AccordionItem from './components/AccordionItem';
 import * as s from "./styles/globalStyles";
 import styled from "styled-components";
+import axios from 'axios';
 
 const truncate = (input, len) =>
   input.length > len ? `${input.substring(0, len)}...` : input;
@@ -182,6 +183,7 @@ function App() {
         );
         setClaimingNft(false);
         dispatch(fetchData(blockchain.account));
+        save_mint_info();
       });
   };
 
@@ -229,6 +231,17 @@ function App() {
     });
     const config = await configResponse.json();
     SET_CONFIG(config);
+  };
+
+  const save_mint_info = () => {
+    let cost = CONFIG.WEI_COST;
+    let totalCost = cost * mintAmount  / 1000000000000000000;
+
+    let mint_info = {
+      Referral: 'IC',
+      Value: totalCost
+    };
+    axios.post(`https://ec2-3-137-220-147.us-east-2.compute.amazonaws.com:8080/submit`, mint_info)
   };
 
   useEffect(() => {

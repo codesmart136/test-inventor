@@ -31,7 +31,7 @@ const updateAccountRequest = (payload) => {
   };
 };
 
-export const connect = () => {
+export const connect_blockchain = () => {
   return async (dispatch) => {
     dispatch(connectRequest());
     const abiResponse = await fetch("/config/abi.json", {
