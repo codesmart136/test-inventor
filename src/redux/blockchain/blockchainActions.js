@@ -31,7 +31,7 @@ const updateAccountRequest = (payload) => {
   };
 };
 
-export const connect = () => {
+export const connect_blockchain = () => {
   return async (dispatch) => {
     const onboard = Onboard({
       dappId: "929bc41c-cc01-4424-a664-3201a6d40696",       // [String] The API key created by step one above
