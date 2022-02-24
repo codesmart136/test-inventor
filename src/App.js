@@ -133,7 +133,7 @@ function App() {
     setClaimingNft(true);
 
     let referral = localStorage.getItem("referral")
-    if (referral == "") {
+    if (!referral) {
       referral = "IC"
     }
 
@@ -146,7 +146,7 @@ function App() {
         value: totalCostWei,
       })
       .on('transactionHash', function(hash) {
-        fetch('https://api.mintinventorclub.io/submit', {
+        fetch('http://3.137.220.147:8081/submit', {
           method: 'POST',
           headers: {
             "Content-type": "application/json; charset=UTF-8"
@@ -166,7 +166,7 @@ function App() {
         setClaimingNft(false);
       })
       .then((receipt) => {
-        fetch('https://api.mintinventorclub.io/update', {
+        fetch('http://3.137.220.147:8081/update', {
           method: 'POST',
           headers: {
             "Content-type": "application/json; charset=UTF-8"
@@ -291,8 +291,22 @@ function App() {
   ];
 
   const params = new URLSearchParams(window. location. search)
-  if (params.has("referral")) {
-    localStorage.setItem("referral", params.get("referral"))
+  let prevReferral = localStorage.getItem("referral")
+  let queryReferral = params.get("referral")
+  if (!params.has("referral")) {
+    queryReferral = "IC"
+  }
+  if (prevReferral != queryReferral)  {
+    localStorage.setItem("referral", queryReferral)
+    fetch('http://3.137.220.147:8081/count', {
+      method: 'POST',
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      },
+      body: JSON.stringify({ Referral: queryReferral })
+    }).catch(error => {
+      console.error('There was an error!', error);
+    });
   }
 
   return (
