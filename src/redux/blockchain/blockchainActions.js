@@ -45,8 +45,6 @@ export const connect_blockchain = () => {
 
     await onboard.walletSelect();
     await onboard.walletCheck();
-
-
   };
 };
 
