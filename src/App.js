@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { connect_blockchain } from "./redux/blockchain/blockchainActions";
+import { connect } from "./redux/blockchain/blockchainActions";
 import { fetchData } from "./redux/data/dataActions";
 import AccordionWrapper from './components/AccordionWrapper'; 
 import AccordionItem from './components/AccordionItem';
 import * as s from "./styles/globalStyles";
 import styled from "styled-components";
-import axios from 'axios';
 
 const truncate = (input, len) =>
   input.length > len ? `${input.substring(0, len)}...` : input;
@@ -132,12 +131,6 @@ function App() {
     console.log("Gas limit: ", totalGasLimit);
     setFeedback(`Minting your ${CONFIG.NFT_NAME}...`);
     setClaimingNft(true);
-
-    let referral = localStorage.getItem("referral")
-    if (!referral) {
-      referral = "IC"
-    }
-
     blockchain.smartContract.methods
       .mint(mintAmount)
       .send({
@@ -146,40 +139,15 @@ function App() {
         from: blockchain.account,
         value: totalCostWei,
       })
-      .on('transactionHash', function(hash) {
-        fetch('http://3.137.220.147:8081/submit', {
-          method: 'POST',
-          headers: {
-            "Content-type": "application/json; charset=UTF-8"
-          },
-          body: JSON.stringify({ Referral: referral, TxHash: hash, Value: cost * mintAmount / 1000000000000000000 })    
-        }).catch(error => {
-          console.error('There was an error!', error);
-        });
-      })
       .once("error", (err) => {
         console.log(err);
-        if (err.code == 4001) {
-          setFeedback("Mint rejected")
-        } else {
-          setFeedback("Sorry, something went wrong please try again later.");
-        }
+        setFeedback("Sorry, something went wrong please try again later.");
         setClaimingNft(false);
       })
       .then((receipt) => {
-        fetch('http://3.137.220.147:8081/update', {
-          method: 'POST',
-          headers: {
-            "Content-type": "application/json; charset=UTF-8"
-          },
-          body: JSON.stringify({ Referral: referral, TxHash: receipt.transactionHash, Value: cost * mintAmount / 1000000000000000000 })    
-        }).catch(error => {
-          console.error('There was an error!', error);
-        });
-
         console.log(receipt);
         setFeedback(
-          `Congratulations! Check your MetaMask wallet in 10 minutes to see your NFT.`
+          `WOW, the ${CONFIG.NFT_NAME} is yours! go visit Opensea.io to view it.`
         );
         setClaimingNft(false);
         dispatch(fetchData(blockchain.account));
@@ -291,25 +259,6 @@ function App() {
     }
   ];
 
-  const params = new URLSearchParams(window. location. search)
-  let prevReferral = localStorage.getItem("referral")
-  let queryReferral = params.get("referral")
-  if (!params.has("referral")) {
-    queryReferral = "IC"
-  }
-  if (prevReferral != queryReferral)  {
-    localStorage.setItem("referral", queryReferral)
-    fetch('http://3.137.220.147:8081/count', {
-      method: 'POST',
-      headers: {
-        "Content-type": "application/json; charset=UTF-8"
-      },
-      body: JSON.stringify({ Referral: queryReferral })
-    }).catch(error => {
-      console.error('There was an error!', error);
-    });
-  }
-
   return (
 
     <s.Screen>
@@ -386,10 +335,6 @@ function App() {
                         </div>
                       ) : (
                         <>
-                          <h3>
-                            {feedback}
-                          </h3>
-                          <br/>
                           <div style={{
                               display: "flex",
                               alignItems: "center",
