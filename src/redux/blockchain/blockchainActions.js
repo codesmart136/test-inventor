@@ -1,5 +1,5 @@
 // constants
-import Onboard from 'bnc-onboard'
+import Web3EthContract from "web3-eth-contract";
 import Web3 from "web3";
 // log
 import { fetchData } from "../data/dataActions";
@@ -31,20 +31,76 @@ const updateAccountRequest = (payload) => {
   };
 };
 
-export const connect_blockchain = () => {
+export const connect = () => {
   return async (dispatch) => {
-    const onboard = Onboard({
-      dappId: "929bc41c-cc01-4424-a664-3201a6d40696",       // [String] The API key created by step one above
-      networkId: 4,  // [Integer] The Ethereum network ID your Dapp uses.
-      subscriptions: {
-        wallet: wallet => {
-           web3 = new Web3(wallet.provider)
-        }
-      }
+    dispatch(connectRequest());
+    const abiResponse = await fetch("/config/abi.json", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
     });
+    const abi = await abiResponse.json();
+    const configResponse = await fetch("/config/config.json", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+    const CONFIG = await configResponse.json();
+    const { ethereum } = window;
+    const metamaskIsInstalled = ethereum;
 
-    await onboard.walletSelect();
-    await onboard.walletCheck();
+    if (metamaskIsInstalled) {
+      Web3EthContract.setProvider(ethereum);
+      if(typeof web3 !== 'undefined'){
+          web3 = new Web3(web3.currentProvider);
+      } else {
+        dispatch(connectFailed("Use the Metamask browser."));
+      }
+      try {
+        
+
+        await ethereum.enable();
+        // const accounts = await ethereum.request({
+        //   method: "eth_requestAccounts",
+        // });
+       
+        const accounts = await web3.eth.getAccounts();
+
+        const networkId = await ethereum.request({
+          method: "net_version",
+        });
+
+        if (networkId == CONFIG.NETWORK.ID) {
+          const SmartContractObj = new Web3EthContract(
+            abi,
+            CONFIG.CONTRACT_ADDRESS
+          );
+          dispatch(
+            connectSuccess({
+              account: accounts[0],
+              smartContract: SmartContractObj,
+              web3: web3,
+            })
+          );
+          // Add listeners start
+          ethereum.on("accountsChanged", (accounts) => {
+            dispatch(updateAccount(accounts[0]));
+          });
+          ethereum.on("chainChanged", () => {
+            window.location.reload();
+          });
+          // Add listeners end
+        } else {
+          dispatch(connectFailed(`Change network to ${CONFIG.NETWORK.NAME}.`));
+        }
+      } catch (err) {
+        dispatch(connectFailed("Something went wrong."));
+      }
+    } else {
+      dispatch(connectFailed("Use the Metamask browser."));
+    }
   };
 };
 
