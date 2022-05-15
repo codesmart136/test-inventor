@@ -324,7 +324,7 @@ function App() {
                               gtag_report_conversion();
                             }}
                           >
-                            MINT HERE</a>
+                            John Santos</a>
                           {blockchain.errorMsg !== "" ? (
                             <>
                               <h3>
